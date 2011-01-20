@@ -1,0 +1,5 @@
+include MANIFEST.in
+include data/*.bof
+include scripts/*.py
+include tests/*.py
+include src/*.py
