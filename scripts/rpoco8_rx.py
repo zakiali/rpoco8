@@ -18,6 +18,9 @@ o = optparse.OptionParser()
 o.add_option('-i','--ip', dest='ip', help='IP address of Pocket Correlator')       
 o.add_option('-m','--myip', dest='myip', help='IP address of this computer')        
 o.add_option('-p','--port', dest='port', type='int', help='UDP port to listen to')
+o.add_option('-l','--len', dest='acc_len', type='int', default = 0x40000000, help='acclen. default value=0x4000000 -> 5.34sec')
+o.add_option('-s','--shift', dest='fft_shift', type='int',default = 0x155, help='fft shift. default value = 0x155')
+o.add_option('-e','--eq', dest='eq_coeff', type='int',default = 16, help='value of equalization coefficinet.default value = 16')
 opts,args = o.parse_args(sys.argv[1:])   
 
 #Set up reciever and item group.The arr variable is so that spead knows to unpack numpy arrays(added when new item group is added, instead of fmt and shape, add narray=arr). This makes unpacking faster, whenever we need it.  
@@ -181,7 +184,7 @@ class DataRecorder(S.ItemGroup):
   
 #start up remote transmitter
 tx=S.Transmitter(S.TransportUDPtx(opts.ip, opts.port))
-bsc = rpoco8.BorphSpeadClient(opts.myip, tx, fft_shift = 0x155, eq_coeff =16 ,acc_length = 0x20000000)# acc_length = 0x20000000)
+bsc = rpoco8.BorphSpeadClient(opts.myip, tx, fft_shift = opts.fft_shift, eq_coeff =opts.eq_coeff ,acc_length = opts.acc_len)
 
 dr = DataRecorder(sdf, sfreq, nchan, inttime, bandpass=None)
 dr.open_uv()
