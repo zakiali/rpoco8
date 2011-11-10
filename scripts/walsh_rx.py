@@ -6,13 +6,13 @@ import optparse, os, sys, struct
 o = optparse.OptionParser()
 o.add_option('-i', '--ip', dest = 'ip', help = 'Roach serial number on paper1')
 o.add_option('-w', '--walsh', dest = 'walsh', type='string', help = 'type of walsh pattern. 0= all zeros. all = 8 orth. pattern.')
-opts,args = o.parse_args(sys.argv[1:])
+opt,args = o.parse_args(sys.argv[1:])
 
 pid = int(args[0])
 
 brams = ['adc0_3', 'adc4_7', 'iadc0_3', 'iadc4_7']
 
-def write_walsh(pid,pattern = opts.walsh):
+def write_walsh(pid,pattern = opt.walsh):
     #to write walsh functions to bram
    # bram = open('/proc/%d/hw/ioreg/walsh_codes' %pid ,'w')
     bram = open('/proc/%d/hw/ioreg/walsh_codes' %pid ,'w')
@@ -103,7 +103,7 @@ def plot_thread(a):
 
 
 
-write_walsh(pid)
+#write_walsh(pid)
 #time.sleep(5)
 #datareceiver('adc0_3')
 #for i in range(4):
