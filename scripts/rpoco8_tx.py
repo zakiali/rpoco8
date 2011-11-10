@@ -1,4 +1,4 @@
-#! /usr/local/bin/env python
+#! /usr/bin/env python
 import spead as S
 import optparse, sys, rpoco8
 import logging; logger = logging.getLogger('rpoco8')
