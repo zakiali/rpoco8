@@ -74,6 +74,7 @@ class DataRecorder(S.ItemGroup):
         self.nchan = nchan
         self.inttime = inttime
         self.bandpass = bandpass
+        self.acc_len = opts.acc_len
     def open_uv(self):
         '''Open a Miriad UV file for writing. Bandpass is the digital 
         equalization that needs to be divided from the output data, 
@@ -100,7 +101,7 @@ class DataRecorder(S.ItemGroup):
         uv['sfreq'] = uv['freq'] = uv['restfreq'] = self.sfreq
         uv['sdf'] = self.sdf
         uv['nchan'] = uv['nschan'] = self.nchan
-        uv['inttime'] = self.inttime
+        uv['inttime'] = self.acc_len/200e6
 
         if self.bandpass is None:
             bandpass = N.ones(8*1024,dtype=N.complex)
@@ -130,18 +131,20 @@ class DataRecorder(S.ItemGroup):
                 data = N.zeros(shape = 1024, dtype = N.complex64)
                 if name[0] == name[1]:
                     R = ig[name+'_r'].reshape([NCHAN,2])
-                    data.real = R[:,0]
+                    data.real = R[:,0]/(self.acc_len/1024.)
                     self.uv_update(name,data,jd)
-                    data.real = R[:,1]
+                    data.real = R[:,1]/(self.acc_len/1024.)
+                    data = data[::-1]
                     self.uv_update(self.then[self.now.index(name)],data,jd)
                 else:
                     R = ig[name+'_r'].reshape([NCHAN,2])
                     I = ig[name+'_i'].reshape([NCHAN,2])
-                    data.real = R[:,0]
-                    data.imag = I[:,0]
+                    data.real = R[:,0]/(self.acc_len/1024.)
+                    data.imag = I[:,0]/(self.acc_len/1024.)
                     self.uv_update(name,data,jd) 
-                    data.real = R[:,1]
-                    data.imag = I[:,1]
+                    data.real = R[:,1]/(self.acc_len/1024.)
+                    data.imag = I[:,1]/(self.acc_len/1024.)
+                    data = data[::-1]
                     if name in ['ae','af','be','bf','cg','ch','dg','dh']:self.uv_update(self.then[self.now.index(name)], N.conj(data),jd)
                     else:self.uv_update(self.then[self.now.index(name)], data,jd)
             c += 1

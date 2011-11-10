@@ -1,15 +1,16 @@
-#! /usr/bin/env python
+#! /usr/local/bin/env python
 import spead as S
 import optparse, sys, rpoco8
 import logging; logger = logging.getLogger('rpoco8')
-import walsh_rx
 
 o = optparse.OptionParser()
 o.add_option('-p','--port', dest='port', type='int',help='SPEAD port for tx/rx')
-o.add.option('-v', '--verbose', dest='verbose', action='store_true', help='Be verbose') 
-o.add.option('-w', '--walsh', dest = 'walsh', type = 'string', default = 0, help = 'type of walsh pattern. 0=zeroes, all = 8 orth. patterns')
+o.add_option('-v', '--verbose', dest='verbose', action='store_true', help='Be verbose') 
+o.add_option('-w', '--walsh', dest = 'walsh', type = 'string', default = '0', help = 'type of walsh pattern. 0=zeroes, all = 8 orth. patterns')
 opts,args = o.parse_args(sys.argv[1:])
-                                                        
+
+print opts.walsh
+print type(opts.walsh)
 if opts.verbose:
     logging.basicConfig(level=logging.DEBUG)
 else:
@@ -21,11 +22,12 @@ pid = int(args[0])
 logger.info('RPOCO8-RX: Started %s with pid=%d' % (rpoco8.BOFFILE, pid))
 
 
-walsh_rx.write_walsh(pid,pattern = opts.option)
+import walsh_rx
+walsh_rx.write_walsh(pid,pattern = opts.walsh)
 
 try:                                        
   bss = rpoco8.BorphSpeadServer(pid)
-  bss.add_item(name='data_timestamp', description='time stamp for data in ms', dtype=S.mkfmt(('u',64)), shape=[1])       
+  bss.add_item(name='data_timestamp', description='time stamp for data in ms',fmt=S.mkfmt(('u',64)), shape=[1]) 
   while True:
     logger.info('RPOCO8-RX: Listening to port %d' % (opts.port))    
     bss.listen(opts.port)                                          
