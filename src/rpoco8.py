@@ -193,7 +193,7 @@ class BorphSpeadClient(S.ItemGroup):
                 self['Sync_sync_pulse'] = i
                 logger.info('BorphSpeadClient.sync_pulse: Sending sync pulse %d' %i)
                 self.send()  
-        def send(self):
+    def send(self):
         logger.info('BorphSpeadClient.send: Sending a heap')
         heap = self.get_heap()
         #for id, val in heap.iteritems():
