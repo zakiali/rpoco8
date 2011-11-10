@@ -1,7 +1,6 @@
-import numpy as N
 #import matplotlib: matplotlib.use('TkAgg')
 #import matplotlib.pyplot as plt
-import  os, sys, struct
+import struct
 
 brams = ['adc0_3', 'adc4_7', 'iadc0_3', 'iadc4_7']
 
