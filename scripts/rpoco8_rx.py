@@ -132,21 +132,19 @@ class DataRecorder(S.ItemGroup):
                 if name[0] == name[1]:
                     R = ig[name+'_r'].reshape([NCHAN,2])
                     data.real = R[:,0]
-                    self.uv_update(name,data,jd)
+                    self.uv_update(name,data[::-1],jd)
                     data.real = R[:,1]
-                    data = data[::-1]
-                    self.uv_update(self.then[self.now.index(name)],data,jd)
+                    self.uv_update(self.then[self.now.index(name)],data[::-1],jd)
                 else:
                     R = ig[name+'_r'].reshape([NCHAN,2])
                     I = ig[name+'_i'].reshape([NCHAN,2])
                     data.real = R[:,0]
                     data.imag = I[:,0]
-                    self.uv_update(name,data,jd) 
+                    self.uv_update(name,data[::-1],jd) 
                     data.real = R[:,1]
                     data.imag = I[:,1]
-                    data = data[::-1]
-                    if name in ['ae','af','be','bf','cg','ch','dg','dh']:self.uv_update(self.then[self.now.index(name)], N.conj(data),jd)
-                    else:self.uv_update(self.then[self.now.index(name)], data,jd)
+                    if name in ['ae','af','be','bf','cg','ch','dg','dh']:self.uv_update(self.then[self.now.index(name)], N.conj(data)[::-1],jd)
+                    else:self.uv_update(self.then[self.now.index(name)], data[::-1],jd)
             c += 1
             if c%300 == 0:
                 filename = 'poco.' + str((time.time()/86400.0)+2440587.5) + '.uv'
