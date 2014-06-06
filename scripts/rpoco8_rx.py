@@ -7,7 +7,6 @@ import logging; logger = logging.getLogger('rpoco8')
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('spead').setLevel(logging.WARN)
 "0-16 coeff, 17 coeff-en, 20-26 coeff-addr, 30-31 ant-pair-sel"         
-import my_cal
    
 NCHAN = 1024
 NANT = 8
@@ -18,9 +17,13 @@ o = optparse.OptionParser()
 o.add_option('-i','--ip', dest='ip', help='IP address of Pocket Correlator')       
 o.add_option('-m','--myip', dest='myip', help='IP address of this computer')        
 o.add_option('-p','--port', dest='port', type='int', help='UDP port to listen to')
-o.add_option('-l','--len', dest='acc_len', type='int', default = 0x40000000, help='acclen. default value=0x4000000 -> 5.34sec')
+o.add_option('-l','--len', dest='acc_len', type='int', default = 0x40000000, help='acclen. default value=0x4000000 -> 5.34sec.
+                                                                                   Acclen/samp_rate = integration time.')
 o.add_option('-s','--shift', dest='fft_shift', type='int',default = 0x155, help='fft shift. default value = 0x155')
 o.add_option('-e','--eq', dest='eq_coeff', type='int',default = 16, help='value of equalization coefficinet.default value = 16')
+o.add_option('--insel', type='int', default=0x00000000, help='Input selection. Hex word where each hex value
+                                                              corresponds to an input type on the roach.
+                                                              0 = adc, 1,2 = digital noise, 3 = digital zero.')
 opts,args = o.parse_args(sys.argv[1:])   
 
 #Set up reciever and item group.The arr variable is so that spead knows to unpack numpy arrays(added when new item group is added, instead of fmt and shape, add narray=arr). This makes unpacking faster, whenever we need it.  
@@ -56,8 +59,9 @@ nchan = NCHAN
 c = 0
 
 class DataRecorder(S.ItemGroup):
-    def __init__(self,sdf,sfreq,nchan,inttime,bandpass=None):
+    def __init__(self, sdf, sfreq, nchan, inttime, calfile='psa6240_v003', samp_rate=200e6bandpass=None):
         aa = my_cal.get_aa(freqs)   
+        aa = A.cal.get_aa(calfile, sdf, sfreq, nchan)
         self.aa = aa
         now = [
                'aa', 'ab', 'ac', 'ad', 'bb', 'bc', 'bd', 'cc', 'cd',
@@ -101,7 +105,7 @@ class DataRecorder(S.ItemGroup):
         uv['sfreq'] = uv['freq'] = uv['restfreq'] = self.sfreq
         uv['sdf'] = self.sdf
         uv['nchan'] = uv['nschan'] = self.nchan
-        uv['inttime'] = self.acc_len/200e6
+        uv['inttime'] = self.acc_len/self.samp_rate
 
         if self.bandpass is None:
             bandpass = N.ones(8*1024,dtype=N.complex)
@@ -185,7 +189,7 @@ class DataRecorder(S.ItemGroup):
   
 #start up remote transmitter
 tx=S.Transmitter(S.TransportUDPtx(opts.ip, opts.port))
-bsc = rpoco8.BorphSpeadClient(opts.myip, tx, fft_shift = opts.fft_shift, eq_coeff =opts.eq_coeff ,acc_length = opts.acc_len)
+bsc = rpoco8.BorphSpeadClient(opts.myip, tx, fft_shift = opts.fft_shift, eq_coeff =opts.eq_coeff ,acc_length = opts.acc_len, input_sel=opts.insel)
 
 dr = DataRecorder(sdf, sfreq, nchan, inttime, bandpass=None)
 dr.open_uv()

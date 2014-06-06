@@ -32,6 +32,7 @@ FPGA_RX_RESOURCES = {
     BASE_RX_ID+2: ('eq_coeff', S.mkfmt(('u',2),('u',10),('u',3),('u',17))),
     BASE_RX_ID+3: ('Sync_sync_sel', S.DEFAULT_FMT),
     BASE_RX_ID+4: ('Sync_sync_pulse', S.DEFAULT_FMT)
+    BASE_RX_ID+5: ('insel_insel_data', S.DEFAULT_FMT)
  # 0-16 coeff, 17 coeff_en, 20-25 coeff_addr, 30-31 ant_select
 }
 
@@ -151,31 +152,38 @@ class SimSpeadServer(BorphSpeadServer):
             logger.debug('SimSpeadServer: Creating file %s' % (filename))
             f = open(filename, 'w')
             if name == 'acc_num':
+                #acc_num starts with a 0 count.
                 f.write('\x00\x00\x00\x00')
                 f.close()
             else: self.brams[id] = open(filename)
+        self._tx_heap = {}
     
 
 class BorphSpeadClient(S.ItemGroup):
     def __init__(self, client_ip, tx, fpga_rx_resources=FPGA_RX_RESOURCES,
-            fft_shift=0x155, acc_length=0x8000000, eq_coeff=1500, sync_sel=1):
+            fft_shift=0x155, acc_length=0x8000000, eq_coeff=1500, sync_sel=1
+            input_sel=0x00000000):
         S.ItemGroup.__init__(self)
         self.tx = tx
         self.add_item('ip', fmt=S.STR_FMT, shape=-1, init_val=client_ip)
         for id in fpga_rx_resources:
             name, fmt = fpga_rx_resources[id]
             self.add_item(name, id=id, fmt=fmt, shape=[])
+        self.input_selector(input_sel)
         self.set_fft_shift(fft_shift)
         self.acc_length(acc_length)
         self.set_eq_coeff(eq_coeff)
         self.send()
         self.Sync_sync_sel(sync_sel)
+
     def set_fft_shift(self, fft_shift):
         logger.info('BorphSpeadClient.set_fft_shift: fft_shift=%x' % (fft_shift))
         self['ctrl_sw'] = fft_shift 
+
     def acc_length(self, acc_length):
         logger.info('BorphSpeadClient.acc_length: acc_length=%x' % (acc_length))
         self['acc_length'] = acc_length
+
     def set_eq_coeff(self, eq_coeff):
     #    "0-16 coeff, 17 coeff-en, 20-25 coeff-addr, 30-31 ant-pair-sel"
         logger.info('BorphSpeadClient.set_eq_coeff: eq_coeff=%d' % (eq_coeff))
@@ -184,6 +192,7 @@ class BorphSpeadClient(S.ItemGroup):
                 logger.debug('BorphSpeadClient.set_eq_coeff: ant_sel=%d, addr=%d, eq_coeff=%d' % (ant_sel, addr, eq_coeff))
                 self['eq_coeff'] = (ant_sel, addr, 1, eq_coeff)
                 self.send()
+
     def Sync_sync_sel(self, sync_sel):
         logger.info('BorphSpeadClient.sync_sel: sync_sel=%d' % (sync_sel))
         self['Sync_sync_sel'] = sync_sel
@@ -193,9 +202,15 @@ class BorphSpeadClient(S.ItemGroup):
                 self['Sync_sync_pulse'] = i
                 logger.info('BorphSpeadClient.sync_pulse: Sending sync pulse %d' %i)
                 self.send()  
-                time.sleep(.2)
+                time.sleep(1)
             self['Sync_sync_pulse'] = 0
             self.send()
+
+    def input_selector(self, input_sel):
+        logger.info('BorphSpeadClient.input_select: input_sel=%d' % (input_sel))
+        self['insel_insel_data'] = input_sel
+        self.send()
+
     def send(self):
         logger.info('BorphSpeadClient.send: Sending a heap')
         heap = self.get_heap()
