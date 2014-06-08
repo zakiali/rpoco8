@@ -31,7 +31,7 @@ FPGA_RX_RESOURCES = {
     BASE_RX_ID+1: ('acc_length', S.DEFAULT_FMT),
     BASE_RX_ID+2: ('eq_coeff', S.mkfmt(('u',2),('u',10),('u',3),('u',17))),
     BASE_RX_ID+3: ('Sync_sync_sel', S.DEFAULT_FMT),
-    BASE_RX_ID+4: ('Sync_sync_pulse', S.DEFAULT_FMT)
+    BASE_RX_ID+4: ('Sync_sync_pulse', S.DEFAULT_FMT),
     BASE_RX_ID+5: ('insel_insel_data', S.DEFAULT_FMT)
  # 0-16 coeff, 17 coeff_en, 20-25 coeff_addr, 30-31 ant_select
 }
