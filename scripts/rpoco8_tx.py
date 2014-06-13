@@ -7,6 +7,7 @@ o = optparse.OptionParser()
 o.add_option('-p','--port', dest='port', type='int',help='SPEAD port for tx/rx')
 o.add_option('-v', '--verbose', dest='verbose', action='store_true', help='Be verbose') 
 o.add_option('-w', '--walsh', dest = 'walsh', type = 'string', default = '0', help = 'type of walsh pattern. 0=zeroes, all = 8 orth. patterns')
+o.add_option('--walshon', action='store_true', help='Turn on walshing')
 opts,args = o.parse_args(sys.argv[1:])
 
 print opts.walsh
@@ -18,12 +19,15 @@ else:
 logging.getLogger('spead').setLevel(logging.WARN)
 
 #pid = rpoco8.start_bof()
-pid = int(args[0])                                                 
-logger.info('RPOCO8-RX: Started %s with pid=%d' % (rpoco8.BOFFILE, pid))
+try:
+    pid = int(args[0])                                                 
+except:
+    pid=None
+#logger.info('RPOCO8-RX: Started %s with pid=%d' % (rpoco8.BOFFILE, pid))
 
-
-import walsh_rx
-walsh_rx.write_walsh(pid,pattern = opts.walsh)
+if opts.walshon:
+    import walsh_rx
+    walsh_rx.write_walsh(pid,pattern = opts.walsh)
 
 try:                                        
   bss = rpoco8.BorphSpeadServer(pid)
@@ -39,6 +43,7 @@ try:
         logger.debug('RPOCO8-RX: Heap sent')
     logger.info('RPOCO8-RX: Client disconnected')
     bss.stop()                                      
+    time.sleep(1)
 except(OSError): logger.fatal('RPOCO8-RX: Cannot start RPOCO8. FPGA already programmed')
 except(KeyboardInterrupt):
     logger.info('RPOCO8-RX: Got KeyboardInterrupt.  Stopping')
