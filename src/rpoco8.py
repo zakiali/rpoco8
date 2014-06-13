@@ -56,8 +56,10 @@ def end_bof(pid):
 class BorphSpeadServer(S.ItemGroup):
     def __init__(self, pid=None, dir=None, fpga_rx_resources=FPGA_RX_RESOURCES, fpga_tx_resources=FPGA_TX_RESOURCES):
         S.ItemGroup.__init__(self)
+
         if not pid is None: self.dir = '/proc/%d/hw/ioreg/' % pid
         else: self.dir = dir
+
         # Resources that may need writing to
         self.fpga_rx = {}
         for id,(filename,fmt) in fpga_rx_resources.iteritems():
@@ -65,6 +67,7 @@ class BorphSpeadServer(S.ItemGroup):
             self.fpga_rx[id] = (filename, SW_REG_LEN)
             logger.debug('BorphSpeadServer: Adding RX resource id=%d filename=%s size=%d' % ((id,) + self.fpga_rx[id]))
         self.is_connected = False
+
         # Resources associated with transmission
         self.brams = {}
         for id,(filename,name,fmt,shape) in fpga_tx_resources.iteritems():
@@ -72,7 +75,9 @@ class BorphSpeadServer(S.ItemGroup):
             logger.debug('BorphSpeadServer: Adding TX resource id=%d filename=%s' % (id, filename))
             if name == 'acc_num': self.acc_num = open(filename)
             else: self.brams[id] = open(filename)
+
         self._tx_heap = {}
+
     def update(self, heap):
         items = heap.get_items()
         # First process items that are linked to FPGA resources
@@ -146,22 +151,82 @@ class BorphSpeadServer(S.ItemGroup):
         return
 
 class SimSpeadServer(BorphSpeadServer):
-    def __init__(self, dir='/tmp/', fpga_rx_resources=FPGA_RX_RESOURCES, fpga_tx_resources=FPGA_TX_RESOURCES):
-        for id,(filename,name,fmt,shape) in fpga_tx_resources.iteritems():
+    '''
+        Simulation server for when a roach 
+        is not available to be tested.
+    '''
+    def __init__(self, dir='/tmp/', fpga_rx_resources=FPGA_RX_RESOURCES,
+                            fpga_tx_resources=FPGA_TX_RESOURCES,
+                            integration_time=5):
+        S.ItemGroup.__init__(self)
+
+        self.dir = dir
+        self.brams = {}
+        self.integration_time = integration_time
+
+        #These are resources that may need writing to on the roach.
+        self.fpga_rx = {}
+        for id,(filename,fmt) in fpga_rx_resources.iteritems():
+            filename = self.dir + filename
+            self.fpga_rx[id] = (filename, SW_REG_LEN)
+            logger.debug('BorphSpeadServer: Adding RX resource id=%d filename=%s size=%d' % ((id,) + self.fpga_rx[id]))
+        self.is_connected = False
+
+        #resources that may need reading from, from the raoch.
+        for id, (filename,name,fmt,shape) in fpga_tx_resources.iteritems():
             filename = self.dir + filename
             logger.debug('SimSpeadServer: Creating file %s' % (filename))
             f = open(filename, 'w')
+            f.close()
             if name == 'acc_num':
                 #acc_num starts with a 0 count.
-                f.write('\x00\x00\x00\x00')
-                f.close()
-            else: self.brams[id] = open(filename)
+                self.acc_num = open(filename, 'w+b')
+                n_zero = N.array(0, dtype=N.uint32).tostring()
+                self.acc_num.write(n_zero)
+            else: self.brams[id] = open(filename, 'w+b')
         self._tx_heap = {}
-    
+
+
+    def write(self):
+        '''
+           Write thread that will pretend it is 
+           the roach updating the files every 
+           integration seconds.
+        '''
+        logger.info('Writing:')
+        self._write_thread = threading.Thread(target=self._write)
+        self._write_thread.daemon = True
+        self._write_thread.start()
+
+    def _write(self):
+        '''Simulates a writing of data into the 
+           brams on the roach. Along with acc_num'''
+        logger.debug('SimSpeadServer._write: Writing to resources. Integration time = %f'%self.integration_time)
+        while True:
+            for id,bram in self.brams.iteritems():
+                bram.seek(0)
+                d = N.random.randint(2**32 - 1,size=2048) 
+                d.dtype = N.uint32
+                d = d[::2]
+                d = d.tostring()
+                bram.write(d)
+                
+            #increase acc_num by one
+            self.acc_num.seek(0)
+            anum = N.array(N.fromstring(self.acc_num.read(), dtype=N.uint32)[0] + 1, dtype=N.uint32)
+            self.acc_num.seek(0)
+            self.acc_num.write(anum.tostring())
+            logger.debug('Writing integration number %d'%anum) 
+
+            time.sleep(self.integration_time)
+        logger.debug('SimSpeadServer._write: Stopping write thread.')
+        
+
+   
 
 class BorphSpeadClient(S.ItemGroup):
     def __init__(self, client_ip, tx, fpga_rx_resources=FPGA_RX_RESOURCES,
-            fft_shift=0x155, acc_length=0x8000000, eq_coeff=1500, sync_sel=1
+            fft_shift=0x155, acc_length=0x8000000, eq_coeff=1500, sync_sel=1,
             input_sel=0x00000000):
         S.ItemGroup.__init__(self)
         self.tx = tx
