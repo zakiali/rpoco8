@@ -1,4 +1,4 @@
-#! /usr/bin/env python                                    
+#!/usr/bin/env python2
 import aipy as A
 import numpy as N
 import optparse, sys, math
@@ -9,7 +9,7 @@ import time
 o = optparse.OptionParser()
 A.scripting.add_standard_options(o, ant=True)
 o.add_option('-m','--mode', dest = 'mode', type= 'string', help = 'different plotting modes. log scale by default. r = real part, i = imag part, a = amplitude, db = db')
-o.add_option('-x','--xmode', dest = 'xmode', type= 'string', help = 'different plotting modes for x-axis. frequency by default(accurate only for poco).ch = channel') 
+o.add_option('-x','--xmode', dest = 'xmode', type= 'string', help = 'different plotting modes for x-axis. frequency by default(accurate only for poco).ch = channel')
 o.add_option('-i', '--integrations', dest='num', type='string', help='pick number of files to integrate')
 o.add_option('--reim',dest = 'reim', action = 'store_true', help = 'make real,imaginary plot')
 o.add_option('--xtalk',dest = 'xtalk', action = 'store_true', help = 'plot corr coeff in dB. only works on one base line with both autos given.')
@@ -24,7 +24,7 @@ BLS = [ai+aj for i,ai in enumerate(ANTS) for aj in ANTS[i:]]
 freq = N.arange(1024,dtype = float)
 c = 100/1024.
 freq = freq*c
-freq = freq + 100 
+freq = freq + 100
 #p.figure()
 #ax1 = p.subplot(121)
 #ax2 = p.subplot(122)
@@ -38,7 +38,7 @@ freq = freq + 100
 psum = {}
 for i in BLS:
     psum['%d%d' %((ANTS.index(i[0])),(ANTS.index(i[1])))] = N.zeros(1024, dtype=N.complex64)
-    #psum['%d%d_avg' %((ANTS.index(i[0])),(ANTS.index(i[1])))] = [] 
+    #psum['%d%d_avg' %((ANTS.index(i[0])),(ANTS.index(i[1])))] = []
 #psum['all'] = [zeros,0]
 #psum['al'] = zeros
 def convert_arg(arg):
@@ -58,13 +58,13 @@ def get_data():
             bl = '%d%d' %(i,j)
             psum[bl] += d
             c+=1
-    #        if c %100 == 0: 
+    #        if c %100 == 0:
     #            psum[bl+'_avg'].append(math.log10((psum[bl]/c).mean()))
     #    if opts.all != True : psum['%d%d' %(i,j)] /= c
 #        if opts.all == True:
 #            psum['all'][0] += psum['%d%d'%(i,j)]
 #            psum['all'][1] += c
-#            if uvfile == args[-1]: 
+#            if uvfile == args[-1]:
 #                psum['all'][0] /= psum['all'][1]
 #                psum['al'] = psum['all'][0]
         print c
@@ -75,8 +75,8 @@ def get_data():
             break
     print f
         #if opts.all != True:plot(ante,f)
-    #if opts.all == True:plot('all', 1) 
-    #if opts.xtalk == True: 
+    #if opts.all == True:plot('all', 1)
+    #if opts.xtalk == True:
     #    p.figure(2)
     #    p.plot(psum['04_avg'])
 def plot(ante):
@@ -88,12 +88,12 @@ def plot(ante):
     #x_axis = N.arange(NCHAN)[w[0]:w[-1]+1]
     #y_axis = data
     #y_axis = N.log10(data)
-    if opts.xmode == 'ch': freq = N.arange(1024)[::-1] 
+    if opts.xmode == 'ch': freq = N.arange(1024)[::-1]
     else:
         freq = N.arange(1024,dtype = float)
         c = 100/1024.
         freq = freq*c
-        freq = freq + 100 
+        freq = freq + 100
     p.subplot(121)
     p.plot(freq,N.angle(d,deg=1)[::-1],'.',label = 'line %s'%ante)
     p.xlabel('frequency (MHz)')
@@ -136,7 +136,7 @@ def corr_coeff():
     for i in convert_arg(opts.ant):
         if i[0] != i[2] and i[0]+'_'+i[0] and i[2]+'_'+i[2] in convert_arg(opts.ant):
             auto_avg = 10*N.log10((N.abs(psum[i[0] + i[0]]) + N.abs(psum[i[2]+i[2]]))/2.)
-            data = 10*N.log10(N.abs(psum[i[0]+i[2]])) 
+            data = 10*N.log10(N.abs(psum[i[0]+i[2]]))
             corr_coeff = data - auto_avg
             avg_val = N.average(corr_coeff[2:-2])
             print 'average value ='+str(avg_val)
@@ -153,11 +153,11 @@ def corr_coeff():
             ax2=ax1.twinx()
             ax2.plot(freq,N.angle(psum[i[0]+i[2]],deg=1)[::-1],'.',color='r')
             ax2.set_ylabel('Phase (degrees)')
-        else: print 'not enough data'            
+        else: print 'not enough data'
         c+=1
 
 t_start = time.time()
-names = [] 
+names = []
 get_data()
 #print convert_arg(opts.ant)
 
@@ -166,7 +166,7 @@ else:
     for i in convert_arg(opts.ant):
         plot(i)
         names.append(i)
-        
+
 t_finish  = time.time()
 t_work = t_finish - t_start
 print t_work, 'seconds = ', t_work/60., 'minutes'
@@ -183,4 +183,4 @@ N.savez('test1_avg', x0_0=psum['00'], x2_2=psum['22'], x5_5=psum['55'], x7_7=psu
 
 
 
- 
+

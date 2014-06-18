@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python2
 import spead as S, numpy as N, aipy as A, ephem
 import sys, optparse, time, threading, os, rpoco8
 import matplotlib; matplotlib.use('TkAgg')

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 import time, os, numpy as N, pylab as P
 
 f = open('/dev/random', 'r')
