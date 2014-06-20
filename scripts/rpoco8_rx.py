@@ -17,13 +17,19 @@ o = optparse.OptionParser()
 o.add_option('-i','--ip', dest='ip', help='IP address of Pocket Correlator')
 o.add_option('-m','--myip', dest='myip', help='IP address of this computer')
 o.add_option('-p','--port', dest='port', type='int', help='UDP port to listen to')
-o.add_option('-l','--len', dest='acc_len', type='int', default = 0x40000000, help='acclen. default value=0x4000000 -> 5.34sec. Acclen/samp_rate = integration time.')
-o.add_option('-s','--shift', dest='fft_shift', type='int',default = 0x155, help='fft shift. default value = 0x155')
-o.add_option('-e','--eq', dest='eq_coeff', type='int',default = 16, help='value of equalization coefficinet.default value = 16')
-o.add_option('--insel', type='int', default=0x00000000, help='Input selection. Hex word where each hex value corresponds to an input type on the roach. 0 = adc, 1,2 = digital noise, 3 = digital zero.')
+o.add_option('-l','--len', dest='acc_len', type='int', default = 0x40000000,
+        help='acclen. default value=0x4000000 -> 5.34sec. Acclen/samp_rate = integration time.')
+o.add_option('-s','--shift', dest='fft_shift', type='int',default = 0x155,
+        help='fft shift. default value = 0x155')
+o.add_option('-e','--eq', dest='eq_coeff', type='int',default = 16,
+        help='value of equalization coefficinet.default value = 16')
+o.add_option('--insel', type='int', default=0x00000000,
+        help='Input selection. Hex word where each hex value corresponds to an input type on the roach. 0 = adc, 1,2 = digital noise, 3 = digital zero.')
 opts,args = o.parse_args(sys.argv[1:])
 
-#Set up reciever and item group.The arr variable is so that spead knows to unpack numpy arrays(added when new item group is added, instead of fmt and shape, add narray=arr). This makes unpacking faster, whenever we need it.
+# Set up reciever and item group.The arr variable is so that spead knows to
+# unpack numpy arrays(added when new item group is added, instead of fmt and
+# shape, add narray=arr). This makes unpacking faster, whenever we need it.
 arr = N.zeros(NCHAN*2)
 arr = N.array(arr, dtype=N.int32)
 
@@ -137,7 +143,8 @@ class DataRecorder(S.ItemGroup):
                     data.real = R[:,0]
                     self.uv_update(name,data[::-1],jd)
                     data.real = R[:,1]
-                    self.uv_update(self.then[self.now.index(name)],data[::-1],jd)
+                    self.uv_update(self.then[self.now.index(name)],
+                                   data[::-1], jd)
                 else:
                     R = ig[name+'_r'].reshape([NCHAN,2])
                     I = ig[name+'_i'].reshape([NCHAN,2])
@@ -146,8 +153,12 @@ class DataRecorder(S.ItemGroup):
                     self.uv_update(name,data[::-1],jd)
                     data.real = R[:,1]
                     data.imag = I[:,1]
-                    if name in ['ae','af','be','bf','cg','ch','dg','dh']:self.uv_update(self.then[self.now.index(name)], N.conj(data)[::-1],jd)
-                    else:self.uv_update(self.then[self.now.index(name)], data[::-1],jd)
+                    if name in ['ae','af','be','bf','cg','ch','dg','dh']:
+                        self.uv_update(self.then[self.now.index(name)],
+                                       N.conj(data)[::-1], jd)
+                    else:
+                        self.uv_update(self.then[self.now.index(name)],
+                                       data[::-1], jd)
             c += 1
             if c%300 == 0:
                 filename = 'poco.' + str((time.time()/86400.0)+2440587.5) + '.uv'
@@ -171,7 +182,7 @@ class DataRecorder(S.ItemGroup):
         flags[-1] = 1.
         flags[0] = 1.
         flags[1] = 1.
-        self.uv.write(preamble, data, flags = flags)
+        self.uv.write(preamble, data[::-1], flags = flags)
 
     def unix2julian(self,sec):
         ''' Converts unix time to julian date. sec is seconds from unix epoch.
