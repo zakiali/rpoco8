@@ -1,4 +1,5 @@
 #! /usr/bin/env python2
+import time
 import spead as S
 import optparse, sys, rpoco8
 import logging; logger = logging.getLogger('rpoco8')
