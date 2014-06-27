@@ -141,7 +141,7 @@ class BorphSpeadServer(S.ItemGroup):
             tme = time.time()
             tme = int(tme*1000)
             htme = S.pack(S.mkfmt(('u',64)),[[tme]])
-            self._tx_heap[TIMESTAMP_ID] = (S.DIRECTADDR,htme)    
+            self._tx_heap[TIMESTAMP_ID] = (S.DIRECTADDR,htme)
             logger.info('BorphSpeadServer.iterheaps: Sending HEAP_CNT=%s' % S.hexify(heap_cnt))
             self._tx_heap[S.HEAP_CNT_ID] = (S.IMMEDIATEADDR, heap_cnt)
             for id,bram in self.brams.iteritems():
@@ -152,7 +152,7 @@ class BorphSpeadServer(S.ItemGroup):
 
 class SimSpeadServer(BorphSpeadServer):
     '''
-        Simulation server for when a roach 
+        Simulation server for when a roach
         is not available to be tested.
     '''
     def __init__(self, dir='/tmp/', fpga_rx_resources=FPGA_RX_RESOURCES,
@@ -189,8 +189,8 @@ class SimSpeadServer(BorphSpeadServer):
 
     def write(self):
         '''
-           Write thread that will pretend it is 
-           the roach updating the files every 
+           Write thread that will pretend it is
+           the roach updating the files every
            integration seconds.
         '''
         logger.info('Writing:')
@@ -199,30 +199,30 @@ class SimSpeadServer(BorphSpeadServer):
         self._write_thread.start()
 
     def _write(self):
-        '''Simulates a writing of data into the 
+        '''Simulates a writing of data into the
            brams on the roach. Along with acc_num'''
         logger.debug('SimSpeadServer._write: Writing to resources. Integration time = %f'%self.integration_time)
         while True:
             for id,bram in self.brams.iteritems():
                 bram.seek(0)
-                d = N.random.randint(2**32 - 1,size=2048) 
+                d = N.random.randint(2**32 - 1,size=2048)
                 d.dtype = N.uint32
                 d = d[::2]
                 d = d.tostring()
                 bram.write(d)
-                
+
             #increase acc_num by one
             self.acc_num.seek(0)
             anum = N.array(N.fromstring(self.acc_num.read(), dtype=N.uint32)[0] + 1, dtype=N.uint32)
             self.acc_num.seek(0)
             self.acc_num.write(anum.tostring())
-            logger.debug('Writing integration number %d'%anum) 
+            logger.debug('Writing integration number %d'%anum)
 
             time.sleep(self.integration_time)
         logger.debug('SimSpeadServer._write: Stopping write thread.')
-        
 
-   
+
+
 
 class BorphSpeadClient(S.ItemGroup):
     def __init__(self, client_ip, tx, fpga_rx_resources=FPGA_RX_RESOURCES,
@@ -235,6 +235,7 @@ class BorphSpeadClient(S.ItemGroup):
             name, fmt = fpga_rx_resources[id]
             self.add_item(name, id=id, fmt=fmt, shape=[])
         self.input_selector(input_sel)
+        self.send()
         self.set_fft_shift(fft_shift)
         self.acc_length(acc_length)
         self.set_eq_coeff(eq_coeff)
@@ -243,7 +244,7 @@ class BorphSpeadClient(S.ItemGroup):
 
     def set_fft_shift(self, fft_shift):
         logger.info('BorphSpeadClient.set_fft_shift: fft_shift=%x' % (fft_shift))
-        self['ctrl_sw'] = fft_shift 
+        self['ctrl_sw'] = fft_shift
 
     def acc_length(self, acc_length):
         logger.info('BorphSpeadClient.acc_length: acc_length=%x' % (acc_length))
@@ -262,11 +263,11 @@ class BorphSpeadClient(S.ItemGroup):
         logger.info('BorphSpeadClient.sync_sel: sync_sel=%d' % (sync_sel))
         self['Sync_sync_sel'] = sync_sel
         self.send()
-        if sync_sel == 1: 
-            for i in range(2):     
+        if sync_sel == 1:
+            for i in range(2):
                 self['Sync_sync_pulse'] = i
                 logger.info('BorphSpeadClient.sync_pulse: Sending sync pulse %d' %i)
-                self.send()  
+                self.send()
                 time.sleep(1)
             self['Sync_sync_pulse'] = 0
             self.send()
@@ -298,7 +299,7 @@ class DataRecorder(S.ItemGroup):
         self.add_item(name='acc_num', id=base_id)
         self.add_item(name='t0', id=base_id+1, fmt='f\x00\x00\x40')
     def open_uv(self, sdf, sfreq, nchan, inttime, bandpass=None):
-        '''Open a Miriad UV file for writing.  Bandpass is the digital 
+        '''Open a Miriad UV file for writing.  Bandpass is the digital
         equalization that needs to be divided from the output data, with
         dimensions (nant, nchans) and dtype complex64.'''
         uv = A.miriad.UV(TMP_FILE, 'new')
