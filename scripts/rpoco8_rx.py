@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 import spead as S, numpy as N, aipy as A, ephem
-import sys, optparse, time, threading, os, rpoco8
+import sys, argparse, time, threading, os, rpoco8
 import matplotlib; matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import logging; logger = logging.getLogger('rpoco8')
@@ -13,19 +13,19 @@ NANT = 8
 letters = 'abcdefgh'
 colors = ['black','red','blue','green','cyan','magenta','yellow','gray']
 
-o = optparse.OptionParser()
-o.add_option('-i','--ip', dest='ip', help='IP address of Pocket Correlator')
-o.add_option('-m','--myip', dest='myip', help='IP address of this computer')
-o.add_option('-p','--port', dest='port', type='int', help='UDP port to listen to')
-o.add_option('-l','--len', dest='acc_len', type='int', default = 0x40000000,
+o = argparse.ArgumentParser()
+o.add_argument('-i','--ip', dest='ip', help='IP address of Pocket Correlator')
+o.add_argument('-m','--myip', dest='myip', help='IP address of this computer')
+o.add_argument('-p','--port', dest='port', type=int, help='UDP port to listen to')
+o.add_argument('-l','--len', dest='acc_len', type=int, default = 0x40000000,
         help='acclen. default value=0x4000000 -> 5.34sec. Acclen/samp_rate = integration time.')
-o.add_option('-s','--shift', dest='fft_shift', type='int',default = 0x155,
-        help='fft shift. default value = 0x155')
-o.add_option('-e','--eq', dest='eq_coeff', type='int',default = 16,
+o.add_argument('-s','--shift', dest='fft_shift', type=int,default = 0x3ff,
+        help='fft shift. default value = 0x3ff')
+o.add_argument('-e','--eq', dest='eq_coeff', type=int,default = 16,
         help='value of equalization coefficinet.default value = 16')
-o.add_option('--insel', type='int', default=0x00000000,
+o.add_argument('--insel', type=int, default=0x00000000,
         help='Input selection. Hex word where each hex value corresponds to an input type on the roach. 0 = adc, 1,2 = digital noise, 3 = digital zero.')
-opts,args = o.parse_args(sys.argv[1:])
+opts = o.parse_args()
 
 # Set up reciever and item group.The arr variable is so that spead knows to
 # unpack numpy arrays(added when new item group is added, instead of fmt and
