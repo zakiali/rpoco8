@@ -3,7 +3,7 @@ import os, threading, time
 import logging; logger = logging.getLogger('rpoco8')
 
 __VERSION__ = '0.0.3'
-BOFFILE = '/boffiles/rpoco8_new_2014_Aug_01_0708.bof'
+BOFFILE = '/boffiles/rpoco8.bof'
 BASE_RX_ID = 0x8000
 BASE_TX_ID = 0x9000
 TIMESTAMP_ID = 0x7000
