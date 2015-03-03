@@ -29,11 +29,11 @@ UV_VAR_TYPES = {
 FPGA_RX_RESOURCES = {
     BASE_RX_ID+0: ('ctrl_sw', S.DEFAULT_FMT),
     BASE_RX_ID+1: ('acc_length', S.DEFAULT_FMT),
-    BASE_RX_ID+2: ('eq_coeff', S.mkfmt(('u',2),('u',10),('u',3),('u',17))),
+    BASE_RX_ID+2: ('eq_coeff', S.mkfmt(('u',4),('u',8),('u',3),('u',17))),
     BASE_RX_ID+3: ('Sync_sync_sel', S.DEFAULT_FMT),
     BASE_RX_ID+4: ('Sync_sync_pulse', S.DEFAULT_FMT),
     BASE_RX_ID+5: ('insel_insel_data', S.DEFAULT_FMT)
- # 0-16 coeff, 17 coeff_en, 20-25 coeff_addr, 30-31 ant_select
+ # 0-16 coeff, 17 coeff_en, 20-25 coeff_addr, 28-29 ant_select
 }
 
 FPGA_TX_RESOURCES = { BASE_TX_ID+0: ('acc_num','acc_num', S.DEFAULT_FMT, []) }
@@ -251,7 +251,7 @@ class BorphSpeadClient(S.ItemGroup):
         self['acc_length'] = acc_length
 
     def set_eq_coeff(self, eq_coeff):
-    #    "0-16 coeff, 17 coeff-en, 20-25 coeff-addr, 30-31 ant-pair-sel"
+    #    "0-16 coeff, 17 coeff-en, 20-25 coeff-addr, 28-29 ant-pair-sel"
         logger.info('BorphSpeadClient.set_eq_coeff: eq_coeff=%d' % (eq_coeff))
         for ant_sel in range(NANT/2):
             for addr in range(EQ_ADDR_RANGE):

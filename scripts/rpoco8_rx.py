@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import logging; logger = logging.getLogger('rpoco8')
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('spead').setLevel(logging.WARN)
-"0-16 coeff, 17 coeff-en, 20-26 coeff-addr, 30-31 ant-pair-sel"
+"0-16 coeff, 17 coeff-en, 20-26 coeff-addr, 28-29 ant-pair-sel"
 
 NCHAN = 1024
 NANT = 8

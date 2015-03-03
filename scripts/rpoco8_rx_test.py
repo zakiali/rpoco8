@@ -1,36 +1,36 @@
-#! /usr/bin/env python       
-import spead as S, numpy as N, aipy as A, ephem      
+#! /usr/bin/env python
+import spead as S, numpy as N, aipy as A, ephem
 import sys, optparse, time, threading, os, rpoco8
 import matplotlib; matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import logging; logger = logging.getLogger('rpoco8')
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('spead').setLevel(logging.WARN)
-"0-16 coeff, 17 coeff-en, 20-26 coeff-addr, 30-31 ant-pair-sel"         
-   
+"0-16 coeff, 17 coeff-en, 20-26 coeff-addr, 28-29 ant-pair-sel"
+
 NCHAN = 1024
 NANT = 8
 letters = 'abcdefgh'
 colors = ['black','red','blue','green','cyan','magenta','yellow','gray']
 
 o = optparse.OptionParser()
-o.add_option('-i','--ip', dest='ip', help='IP address of Pocket Correlator')       
-o.add_option('-m','--myip', dest='myip', help='IP address of this computer')        
+o.add_option('-i','--ip', dest='ip', help='IP address of Pocket Correlator')
+o.add_option('-m','--myip', dest='myip', help='IP address of this computer')
 o.add_option('-p','--port', dest='port', type='int', help='UDP port to listen to')
 o.add_option('-l','--len', dest='acc_len', type='int', default = 0x40000000, help='acclen. default value=0x4000000 -> 5.34sec. Acclen/samp_rate = integration time.')
 o.add_option('-s','--shift', dest='fft_shift', type='int',default = 0x155, help='fft shift. default value = 0x155')
 o.add_option('-e','--eq', dest='eq_coeff', type='int',default = 16, help='value of equalization coefficinet.default value = 16')
 o.add_option('--insel', type='int', default=0x00000000, help='Input selection. Hex word where each hex valuecorresponds to an input type on the roach.0 = adc, 1,2 = digital noise, 3 = digital zero.')
-opts,args = o.parse_args(sys.argv[1:])   
+opts,args = o.parse_args(sys.argv[1:])
 
-#Set up reciever and item group.The arr variable is so that spead knows to unpack numpy arrays(added when new item group is added, instead of fmt and shape, add narray=arr). This makes unpacking faster, whenever we need it.  
+#Set up reciever and item group.The arr variable is so that spead knows to unpack numpy arrays(added when new item group is added, instead of fmt and shape, add narray=arr). This makes unpacking faster, whenever we need it.
 arr = N.zeros(NCHAN*2)
-arr = N.array(arr, dtype=N.int32) 
+arr = N.array(arr, dtype=N.int32)
 
 #rx = S.TransportUDPrx(opts.port, pkt_count=4096)
 rx = S.TransportUDPrx(opts.port+1)#, pkt_count=4096)
-ig = S.ItemGroup()                                       
-for id in rpoco8.FPGA_TX_RESOURCES:                          
+ig = S.ItemGroup()
+for id in rpoco8.FPGA_TX_RESOURCES:
     bram,name,fmt,shape = rpoco8.FPGA_TX_RESOURCES[id]
     if name != 'acc_num':
         ig.add_item(name=name, id=id , fmt=fmt, shape=shape)
@@ -40,10 +40,10 @@ ig.add_item(name='data_timestamp', id=rpoco8.TIMESTAMP_ID,fmt=S.mkfmt(('u',64)),
 
 #
 
-#the values of the items that need to be written too in miriad. 
+#the values of the items that need to be written too in miriad.
 
-#sdf=input('sdf(d)=')  change in frequency between channels. 
-#sfreq=input('sfreq(d)=') starting frequency, off 0th channel. 
+#sdf=input('sdf(d)=')  change in frequency between channels.
+#sfreq=input('sfreq(d)=') starting frequency, off 0th channel.
 #nchan=input('nchan(i)=') number of channels
 #inttime=input('inttime(d)=') integration time
 #bandpass=input('bandpass=') array of size nchan x nants
@@ -51,14 +51,14 @@ inttime=(2**30)*5e-9
 sfreq = 0.200
 sdf = -0.10/1024.
 fre = N.arange(8,dtype = N.integer)
-freqs = fre * 0.1      
+freqs = fre * 0.1
 nchan = NCHAN
 
 c = 0
 
 class DataRecorder(S.ItemGroup):
     def __init__(self, sdf, sfreq, nchan, inttime, calfile='psa6240_v003', samp_rate=200e6, bandpass=None):
-        #aa = my_cal.get_aa(freqs)   
+        #aa = my_cal.get_aa(freqs)
         aa = A.cal.get_aa(calfile, sdf, sfreq, nchan)
         self.aa = aa
         now = [
@@ -69,7 +69,7 @@ class DataRecorder(S.ItemGroup):
                 'ee', 'ef', 'eg', 'eh', 'ff', 'fg', 'fh', 'gg', 'gh',
                 'hh', 'ce', 'de', 'cf', 'df', 'ag', 'bg', 'ah', 'bh'
                ]
-        self.now = now 
+        self.now = now
         self.then = then
         self.sdf = sdf
         self.sfreq = sfreq
@@ -79,8 +79,8 @@ class DataRecorder(S.ItemGroup):
         self.acc_len = opts.acc_len
         self.samp_rate= samp_rate
     def open_uv(self):
-        '''Open a Miriad UV file for writing. Bandpass is the digital 
-        equalization that needs to be divided from the output data, 
+        '''Open a Miriad UV file for writing. Bandpass is the digital
+        equalization that needs to be divided from the output data,
         with dimensions (nant, nchans) and dtype complex64'''
         uv = A.miriad.UV('TMP_FILE', status = 'new')
         for v in rpoco8.UV_VAR_TYPES:
@@ -98,7 +98,7 @@ class DataRecorder(S.ItemGroup):
         uv['epoch'] = 2000.
         uv['nspect'] = 1
         uv['ischan'] = 1
-        uv['veldop'] = uv['vsource'] = 0. 
+        uv['veldop'] = uv['vsource'] = 0.
         uv['longitu'] = self.aa.long
         uv['latitud'] = uv['dec'] = uv['obsdec'] = self.aa.lat
         uv['sfreq'] = uv['freq'] = uv['restfreq'] = self.sfreq
@@ -121,7 +121,7 @@ class DataRecorder(S.ItemGroup):
            Then writes the uv files '''
         global c
         logger.info('RPOCO8-RX.rx_thread: Starting receiver thread')
-        for heap in S.iterheaps(rx): 
+        for heap in S.iterheaps(rx):
             ig.update(heap)
             ig['acc_num']= ig.heap_cnt
             #print ig.keys()
@@ -143,7 +143,7 @@ class DataRecorder(S.ItemGroup):
                     I = ig[name+'_i'].reshape([NCHAN,2])
                     data.real = R[:,0]
                     data.imag = I[:,0]
-                    self.uv_update(name,data[::-1],jd) 
+                    self.uv_update(name,data[::-1],jd)
                     data.real = R[:,1]
                     data.imag = I[:,1]
                     if name in ['ae','af','be','bf','cg','ch','dg','dh']:self.uv_update(self.then[self.now.index(name)], N.conj(data)[::-1],jd)
@@ -185,7 +185,7 @@ class DataRecorder(S.ItemGroup):
         logger.info('RPOCO8-RX.rx_thread: Closing UV file and renaming to %s' %filename)
         del(self.uv)
         os.rename('TMP_FILE', filename)
-  
+
 #start up remote transmitter
 tx=S.Transmitter(S.TransportUDPtx(opts.ip, opts.port))
 bsc = rpoco8.BorphSpeadClient(opts.myip, tx, fft_shift = opts.fft_shift, eq_coeff =opts.eq_coeff ,acc_length = opts.acc_len, input_sel=opts.insel)
@@ -197,7 +197,7 @@ dr.open_uv()
 try: dr.write_thread()
 except(KeyboardInterrupt):
     logger.info('RPOCO8-RX: Got KeyboardInterrupt, shutting down')
-#finally:    
+#finally:
     logger.info('RPOCO8-RX: Shutting down TX')
     tx.end()
     logger.info('RPOCO8-RX: Shutting down RX')
